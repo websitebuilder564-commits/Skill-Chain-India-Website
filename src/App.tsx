@@ -68,25 +68,25 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#050507] min-h-screen text-slate-300 font-sans flex flex-col justify-between relative overflow-hidden">
+    <div className="bg-[#080603] min-h-screen text-[#f5f1e6] font-sans flex flex-col justify-between relative overflow-hidden">
       
       {/* Background Atmosphere */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-indigo-900/15 rounded-full blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-900/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-amber-950/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-yellow-950/15 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
       {/* GLOBAL SAAS NAVIGATION BAR */}
-      <header className="sticky top-0 z-40 bg-black/40 backdrop-blur-md border-b border-white/5 px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#0c0905]/70 backdrop-blur-md border-b border-[#e6ca65]/10 px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
         
         {/* Brand Logo */}
         <div 
           onClick={() => setCurrentView('home')} 
           className="flex items-center gap-2.5 cursor-pointer group select-none z-10"
         >
-          <div className="w-9 h-9 bg-gradient-to-tr from-cyan-500 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] group-hover:scale-105 transition-transform">
-            F
+          <div className="w-9 h-9 bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-700 rounded-xl flex items-center justify-center font-bold text-lg text-[#0c0904] shadow-[0_0_15px_rgba(230,202,101,0.4)] group-hover:scale-105 transition-transform">
+            S
           </div>
-          <span className="font-display font-extrabold tracking-wider text-white text-base sm:text-lg">
-            FUNNGRO <span className="text-cyan-400 font-mono text-xs sm:text-sm font-semibold">WEB3</span>
+          <span className="font-serif-lux font-black tracking-widest text-[#fbf5b7] text-base sm:text-lg">
+            SKILL CHAIN <span className="text-amber-400 font-mono text-xs sm:text-sm font-bold">INDIA</span>
           </span>
         </div>
 
@@ -94,31 +94,31 @@ const AppContent: React.FC = () => {
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium z-10">
           <button 
             onClick={() => { setCurrentView('home'); setSelectedStudentId(undefined); }}
-            className={`transition cursor-pointer ${currentView === 'home' ? 'text-cyan-400 font-bold' : 'text-slate-400 hover:text-white'}`}
+            className={`transition cursor-pointer ${currentView === 'home' ? 'text-amber-400 font-bold drop-shadow-[0_0_8px_rgba(230,202,101,0.5)]' : 'text-amber-100/60 hover:text-[#fff8dc]'}`}
           >
             Home
           </button>
           <button 
             onClick={() => { setCurrentView('marketplace'); setSelectedStudentId(undefined); }}
-            className={`transition cursor-pointer ${currentView === 'marketplace' ? 'text-cyan-400 font-bold' : 'text-slate-400 hover:text-white'}`}
+            className={`transition cursor-pointer ${currentView === 'marketplace' ? 'text-amber-400 font-bold drop-shadow-[0_0_8px_rgba(230,202,101,0.5)]' : 'text-amber-100/60 hover:text-[#fff8dc]'}`}
           >
             Marketplace
           </button>
           <button 
             onClick={() => { setCurrentView('innovation-hub'); setSelectedStudentId(undefined); }}
-            className={`transition cursor-pointer ${currentView === 'innovation-hub' ? 'text-cyan-400 font-bold' : 'text-slate-400 hover:text-white'}`}
+            className={`transition cursor-pointer ${currentView === 'innovation-hub' ? 'text-amber-400 font-bold drop-shadow-[0_0_8px_rgba(230,202,101,0.5)]' : 'text-amber-100/60 hover:text-[#fff8dc]'}`}
           >
             Innovation Hub
           </button>
           <button 
             onClick={() => { setCurrentView('dashboard'); setSelectedStudentId(undefined); }}
-            className={`transition cursor-pointer ${currentView === 'dashboard' ? 'text-cyan-400 font-bold' : 'text-slate-400 hover:text-white'}`}
+            className={`transition cursor-pointer ${currentView === 'dashboard' ? 'text-amber-400 font-bold drop-shadow-[0_0_8px_rgba(230,202,101,0.5)]' : 'text-amber-100/60 hover:text-[#fff8dc]'}`}
           >
             Dashboard
           </button>
           <button 
             onClick={() => { setCurrentView('gmail'); setSelectedStudentId(undefined); }}
-            className={`transition cursor-pointer ${currentView === 'gmail' ? 'text-cyan-400 font-bold' : 'text-slate-400 hover:text-white'}`}
+            className={`transition cursor-pointer ${currentView === 'gmail' ? 'text-amber-400 font-bold drop-shadow-[0_0_8px_rgba(230,202,101,0.5)]' : 'text-amber-100/60 hover:text-[#fff8dc]'}`}
           >
             Gig Mail
           </button>

@@ -40,6 +40,93 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNaviga
   // Toast alert simulator
   const [toast, setToast] = useState<string | null>(null);
 
+  // AI Matching States
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiReport, setAiReport] = useState<{
+    compatibilityScore: number;
+    verdict: string;
+    suitabilityAnalysis: string;
+    smartTips: string[];
+    draftProposal: string;
+  } | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [copiedProposal, setCopiedProposal] = useState(false);
+
+  // AI Escrow Agreement States
+  const [agreementLoading, setAgreementLoading] = useState(false);
+  const [agreement, setAgreement] = useState<{
+    agreementTitle: string;
+    clauses: string[];
+    suggestedMilestones: { name: string; percentage: number; deliverable: string }[];
+  } | null>(null);
+
+  const evaluateSuitability = async (opp: Opportunity) => {
+    if (!currentStudent) {
+      setToast("Please log in as a student to evaluate matching suitability");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    setAiLoading(true);
+    setAiError(null);
+    setAiReport(null);
+    try {
+      const response = await fetch("/api/ai/match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student: currentStudent,
+          opportunity: opp
+        })
+      });
+      if (!response.ok) {
+        throw new Error("Failed to contact the AI Counselor backend. Verify server.ts is active.");
+      }
+      const data = await response.json();
+      setAiReport(data);
+      setToast("Premium AI evaluation complete! Scroll down to see full report.");
+      setTimeout(() => setToast(null), 3500);
+    } catch (err: any) {
+      console.error(err);
+      setAiError(err.message || "Failed to fetch evaluation.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const generateAgreementPreview = async (opp: Opportunity) => {
+    if (!currentStudent) {
+      setToast("Please log in as a student to generate custom agreement");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    setAgreementLoading(true);
+    setAgreement(null);
+    try {
+      const response = await fetch("/api/ai/generate-agreement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentName: currentStudent.name,
+          companyName: opp.companyName,
+          projectTitle: opp.title,
+          budget: opp.budget,
+          description: opp.description
+        })
+      });
+      if (!response.ok) {
+        throw new Error("Failed to contact the smart contract generator.");
+      }
+      const data = await response.json();
+      setAgreement(data);
+      setToast("Interactive Escrow Smart Agreement Generated!");
+      setTimeout(() => setToast(null), 3500);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setAgreementLoading(false);
+    }
+  };
+
   // Collect all unique skills
   const allSkills = Array.from(new Set(opportunities.flatMap(o => o.requiredSkills)));
 
@@ -347,6 +434,9 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNaviga
                     setSelectedOpp(null);
                     setApplying(false);
                     setReporting(false);
+                    setAiReport(null);
+                    setAgreement(null);
+                    setAiError(null);
                   }}
                   className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 text-slate-400 hover:text-white transition cursor-pointer"
                 >
@@ -422,6 +512,204 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNaviga
                     ))}
                   </div>
                 </div>
+              </div>
+
+              {/* ✨ GOLD PREMIUM AI COUNSELOR & SMART MATCH UNIT */}
+              <div className="premium-card p-6 rounded-2xl border-[#e6ca65]/20 bg-[#120e07]/80 space-y-6 shadow-[0_0_20px_rgba(230,202,101,0.05)] relative overflow-hidden group">
+                {/* Decorative gold spotlight */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/15 transition-all"></div>
+                
+                <div className="flex items-center justify-between border-b border-[#e6ca65]/10 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-gradient-to-tr from-[#bf953f] to-[#aa771c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(230,202,101,0.35)]">
+                      <Sparkles className="w-5 h-5 text-black" />
+                    </div>
+                    <div>
+                      <h4 className="font-serif-lux font-bold text-[#fbf5b7] tracking-wider text-sm sm:text-base">AI GIG COUNSELOR</h4>
+                      <p className="text-[10px] font-mono text-amber-400/70 tracking-widest uppercase">Skill Chain Gold Intelligence</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full font-mono uppercase font-bold tracking-widest">
+                    Active
+                  </span>
+                </div>
+
+                {!aiReport && !aiLoading && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-amber-100/70 leading-relaxed">
+                      Evaluate your suitability using our advanced multi-dimensional matching engine. Generates suitability score, specialized smart strategies, and customized premium proposals.
+                    </p>
+                    <div className="flex flex-wrap gap-2.5">
+                      <button
+                        onClick={() => evaluateSuitability(selectedOpp)}
+                        className="premium-button-gold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4 text-black animate-spin" />
+                        Analyze Suitability & Write Proposal
+                      </button>
+
+                      <button
+                        onClick={() => generateAgreementPreview(selectedOpp)}
+                        className="px-5 py-2.5 bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-400 font-bold transition cursor-pointer flex items-center gap-2"
+                      >
+                        <Shield className="w-4 h-4" />
+                        Draft Escrow Agreement
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {aiLoading && (
+                  <div className="flex flex-col items-center justify-center py-8 space-y-4 text-center">
+                    <div className="relative">
+                      {/* Premium pulsing golden circles */}
+                      <div className="w-12 h-12 rounded-full border-2 border-amber-400/20 animate-ping absolute inset-0"></div>
+                      <div className="w-12 h-12 rounded-full border-2 border-amber-400/40 animate-pulse flex items-center justify-center">
+                        <Sparkles className="w-6 h-6 text-amber-400 animate-spin" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-[#fbf5b7] font-semibold tracking-wider font-mono uppercase animate-pulse">Running Indian Talent Matrix Analysis...</p>
+                      <p className="text-[10px] text-amber-400/50">Evaluating Reputation Level & draft-matching on-chain parameters</p>
+                    </div>
+                  </div>
+                )}
+
+                {aiError && (
+                  <div className="p-4 bg-red-950/20 border border-red-500/20 rounded-xl text-xs text-red-300">
+                    {aiError}
+                  </div>
+                )}
+
+                {aiReport && (
+                  <div className="space-y-5 animate-in fade-in duration-500">
+                    {/* Score section */}
+                    <div className="flex items-center gap-5 bg-amber-950/20 border border-amber-500/10 p-4 rounded-xl">
+                      <div className="relative flex items-center justify-center">
+                        <svg className="w-16 h-16 transform -rotate-90">
+                          <circle cx="32" cy="32" r="28" stroke="currentColor" className="text-amber-950" strokeWidth="4" fill="transparent" />
+                          <circle cx="32" cy="32" r="28" stroke="currentColor" className="text-amber-400" strokeWidth="4" fill="transparent" 
+                            strokeDasharray={175} strokeDashoffset={175 - (175 * aiReport.compatibilityScore) / 100} />
+                        </svg>
+                        <span className="absolute text-sm font-bold font-mono text-amber-400">{aiReport.compatibilityScore}%</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-amber-400/70 uppercase tracking-wider">Evaluation Verdict</span>
+                          <span className="text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+                            {aiReport.verdict}
+                          </span>
+                        </div>
+                        <p className="text-xs text-amber-100/80 mt-1 leading-relaxed font-cursive-lux italic">
+                          "{aiReport.suitabilityAnalysis}"
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Smart Tips */}
+                    <div className="space-y-2">
+                      <h5 className="text-xs font-mono text-amber-400 uppercase tracking-widest">Personalized Gig Strategy</h5>
+                      <ul className="space-y-2">
+                        {aiReport.smartTips?.map((tip, i) => (
+                          <li key={i} className="text-xs text-amber-100/80 flex items-start gap-2">
+                            <span className="text-amber-400 text-base leading-none">•</span>
+                            <span>{tip}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Draft proposal */}
+                    <div className="space-y-2 border-t border-amber-500/10 pt-4">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-xs font-mono text-amber-400 uppercase tracking-widest">AI Crafted Proposal Draft</h5>
+                        <button
+                          onClick={() => {
+                            setSubComment(aiReport.draftProposal);
+                            setApplying(true);
+                            setToast("Successfully loaded proposal into pitch! Ready for submission.");
+                            setTimeout(() => setToast(null), 3000);
+                          }}
+                          className="text-[11px] text-[#0c0904] font-bold bg-amber-400 hover:bg-amber-300 px-3 py-1 rounded transition cursor-pointer flex items-center gap-1"
+                        >
+                          <Send className="w-3 h-3" />
+                          Auto-insert into Pitch
+                        </button>
+                      </div>
+                      <div className="bg-black/40 border border-[#e6ca65]/10 p-3.5 rounded-xl font-mono text-[11px] leading-relaxed text-amber-200/80 max-h-36 overflow-y-auto">
+                        {aiReport.draftProposal}
+                      </div>
+                    </div>
+
+                    {/* Reset evaluation button */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setAiReport(null)}
+                        className="text-xs text-amber-400/70 hover:text-amber-300 underline font-mono cursor-pointer"
+                      >
+                        Reset Evaluation
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Agreement preview section */}
+                {agreementLoading && (
+                  <div className="flex flex-col items-center justify-center py-8 space-y-4 text-center border-t border-amber-500/10 pt-6">
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-full border-2 border-amber-400/20 animate-ping absolute inset-0"></div>
+                      <div className="w-12 h-12 rounded-full border-2 border-amber-400/40 animate-pulse flex items-center justify-center">
+                        <Shield className="w-6 h-6 text-amber-400" />
+                      </div>
+                    </div>
+                    <div className="space-y-1 animate-pulse">
+                      <p className="text-xs text-[#fbf5b7] font-semibold font-mono uppercase tracking-wider">Compiling On-Chain Web3 Clauses...</p>
+                      <p className="text-[10px] text-amber-400/50">Configuring multisig escrow conditions and auto-releasing milestones</p>
+                    </div>
+                  </div>
+                )}
+
+                {agreement && (
+                  <div className="space-y-4 border-t border-[#e6ca65]/10 pt-5 animate-in fade-in duration-500">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-amber-400" />
+                      <h4 className="text-xs font-mono text-[#fbf5b7] tracking-wider uppercase">{agreement.agreementTitle}</h4>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-mono text-amber-400/70 uppercase tracking-widest block">Proposed Milestones</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        {agreement.suggestedMilestones?.map((m, i) => (
+                          <div key={i} className="bg-black/30 border border-[#e6ca65]/10 p-3 rounded-lg text-xs">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-[#fbf5b7]">{m.name}</span>
+                              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">{m.percentage}% payout</span>
+                            </div>
+                            <p className="text-[10px] text-amber-100/60 mt-1">{m.deliverable}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-mono text-amber-400/70 uppercase tracking-widest block">Web3 Escrow Clauses</span>
+                      <div className="space-y-2 bg-black/40 border border-[#e6ca65]/10 p-3 rounded-xl max-h-24 overflow-y-auto text-[10px] text-amber-100/70 leading-relaxed font-mono">
+                        {agreement.clauses?.map((c, i) => (
+                          <p key={i}>• {c}</p>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setAgreement(null)}
+                        className="text-xs text-amber-400/70 hover:text-amber-300 underline font-mono cursor-pointer"
+                      >
+                        Reset Agreement Preview
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Company information block */}

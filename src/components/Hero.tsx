@@ -43,29 +43,29 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onSelectStudent }) => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 bg-cyan-950/40 border border-cyan-500/30 px-4 py-1.5 rounded-full text-cyan-300 text-sm font-mono tracking-wide shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+            className="inline-flex items-center gap-2 bg-amber-950/40 border border-amber-500/30 px-4 py-1.5 rounded-full text-amber-300 text-sm font-mono tracking-wide shadow-[0_0_15px_rgba(230,202,101,0.15)]"
           >
-            <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
-            Empowering the Next Generation of Builders
+            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+            Empowering the Next Generation of Builders in India
           </motion.div>
 
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent"
+            className="text-4xl sm:text-7xl font-bold tracking-tight text-white leading-none"
           >
-            Turn Your Skills <br className="hidden sm:inline" />
-            Into <span className="text-cyan-400 font-mono tracking-tighter">On-Chain</span> Income
+            Turn Your Skills Into <br className="hidden sm:inline" />
+            <span className="gold-text-shimmer font-serif-lux font-black italic block mt-2 text-5xl sm:text-8xl">On-Chain Gold</span>
           </motion.h1>
 
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg text-slate-400 font-sans max-w-2xl mx-auto leading-relaxed"
+            className="text-lg text-amber-100/70 font-sans max-w-2xl mx-auto leading-relaxed"
           >
-            Find micro-projects and internships from verified global companies. Earn money and instantly build your tamper-proof, blockchain-verified reputation.
+            Find premium micro-projects, Web3 internships, and high-converting gigs. Build your elite on-chain reputation and verify your credentials using Gemini intelligence.
           </motion.p>
 
           <motion.div 
@@ -76,19 +76,19 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onSelectStudent }) => {
           >
             <button 
               onClick={() => onNavigate('student-dashboard')}
-              className="w-full sm:w-auto bg-gradient-to-tr from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-medium px-8 py-4 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group"
+              className="w-full sm:w-auto premium-button-gold px-8 py-4 rounded-xl flex items-center justify-center gap-2 cursor-pointer group"
               id="get-started-btn"
             >
               Get Started
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-black" />
             </button>
             <button 
               onClick={() => onNavigate('marketplace')}
-              className="w-full sm:w-auto bg-white/5 border border-white/10 hover:bg-white/[0.08] hover:border-white/20 text-slate-200 font-medium px-8 py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10 text-amber-400 font-medium px-8 py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
               id="browse-projects-btn"
             >
               Browse Projects
-              <Briefcase className="w-5 h-5 text-slate-400" />
+              <Briefcase className="w-5 h-5 text-amber-400" />
             </button>
           </motion.div>
         </div>
