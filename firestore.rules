@@ -1,0 +1,222 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default-deny catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper: Auth Check
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: Email Verification
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    // Helper: Bootstrapped Admin check
+    function isAdmin() {
+      return isSignedIn() && isEmailVerified() && request.auth.token.email == "websitebuilder564@gmail.com";
+    }
+
+    // Helper: Document ID security guard
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper: Short Hand for resource states
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ----------------------------------------------------
+    // Collection: Students
+    // ----------------------------------------------------
+    match /students/{studentId} {
+      function isValidStudent(data) {
+        return data.keys().hasAll(['id', 'name', 'reputation'])
+          && data.id is string && data.id.size() <= 100
+          && data.name is string && data.name.size() <= 100
+          && data.reputation is int
+          && (!('email' in data) || (data.email is string && data.email.size() <= 100))
+          && (!('avatar' in data) || (data.avatar is string && data.avatar.size() <= 500))
+          && (!('skills' in data) || (data.skills is string && data.skills.size() <= 500))
+          && (!('walletAddress' in data) || (data.walletAddress is string && data.walletAddress.size() <= 100))
+          && (!('completedProjectsCount' in data) || (data.completedProjectsCount is int))
+          && (!('innovationPoints' in data) || (data.innovationPoints is int))
+          && (!('rating' in data) || (data.rating is number));
+      }
+
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(studentId) && isValidStudent(incoming()) && (request.auth.uid == studentId || isAdmin());
+      allow update: if isSignedIn() && isValidId(studentId) && isValidStudent(incoming()) && (request.auth.uid == studentId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // Collection: Companies
+    // ----------------------------------------------------
+    match /companies/{companyId} {
+      function isValidCompany(data) {
+        return data.keys().hasAll(['id', 'name'])
+          && data.id is string && data.id.size() <= 100
+          && data.name is string && data.name.size() <= 100
+          && (!('about' in data) || (data.about is string && data.about.size() <= 1000))
+          && (!('industry' in data) || (data.industry is string && data.industry.size() <= 100))
+          && (!('logo' in data) || (data.logo is string && data.logo.size() <= 500))
+          && (!('rating' in data) || (data.rating is number))
+          && (!('projectsPosted' in data) || (data.projectsPosted is int))
+          && (!('studentsHired' in data) || (data.studentsHired is int))
+          && (!('isVerified' in data) || (data.isVerified is bool));
+      }
+
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(companyId) && isValidCompany(incoming()) && (request.auth.uid == companyId || isAdmin());
+      allow update: if isSignedIn() && isValidId(companyId) && isValidCompany(incoming()) && (request.auth.uid == companyId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // Collection: Opportunities
+    // ----------------------------------------------------
+    match /opportunities/{opportunityId} {
+      function isValidOpportunity(data) {
+        return data.keys().hasAll(['id', 'title', 'companyId', 'budget', 'status'])
+          && data.id is string && data.id.size() <= 100
+          && data.title is string && data.title.size() <= 200
+          && data.companyId is string && data.companyId.size() <= 100
+          && data.budget is int && data.budget >= 0
+          && data.status is string && (data.status == 'open' || data.status == 'ongoing' || data.status == 'completed')
+          && (!('description' in data) || (data.description is string && data.description.size() <= 5000))
+          && (!('responsibilities' in data) || (data.responsibilities is string && data.responsibilities.size() <= 3000))
+          && (!('deliverables' in data) || (data.deliverables is string && data.deliverables.size() <= 3000))
+          && (!('duration' in data) || (data.duration is string && data.duration.size() <= 100))
+          && (!('deadline' in data) || (data.deadline is string && data.deadline.size() <= 100))
+          && (!('skillsRequired' in data) || (data.skillsRequired is string && data.skillsRequired.size() <= 500))
+          && (!('location' in data) || (data.location is string && data.location.size() <= 100))
+          && (!('paymentMethod' in data) || (data.paymentMethod is string && (data.paymentMethod == 'Crypto' || data.paymentMethod == 'Stripe' || data.paymentMethod == 'Razorpay')))
+          && (!('paymentStatus' in data) || (data.paymentStatus is string && (data.paymentStatus == 'pending' || data.paymentStatus == 'escrowed' || data.paymentStatus == 'released')));
+      }
+
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(opportunityId) && isValidOpportunity(incoming()) && (request.auth.uid == incoming().companyId || isAdmin());
+      allow update: if isSignedIn() && isValidId(opportunityId) && isValidOpportunity(incoming()) && (
+        request.auth.uid == existing().companyId || 
+        request.auth.uid == incoming().companyId || 
+        isAdmin() ||
+        (request.auth.uid != null && incoming().diff(existing()).affectedKeys().hasOnly(['applicantsCount']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // Collection: Applications
+    // ----------------------------------------------------
+    match /applications/{applicationId} {
+      function isValidApplication(data) {
+        return data.keys().hasAll(['id', 'opportunityId', 'studentId', 'status'])
+          && data.id is string && data.id.size() <= 100
+          && data.opportunityId is string && data.opportunityId.size() <= 100
+          && data.studentId is string && data.studentId.size() <= 100
+          && data.status is string && (data.status == 'applied' || data.status == 'shortlisted' || data.status == 'hired' || data.status == 'rejected' || data.status == 'completed')
+          && (!('opportunityTitle' in data) || (data.opportunityTitle is string && data.opportunityTitle.size() <= 200))
+          && (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 100))
+          && (!('studentName' in data) || (data.studentName is string && data.studentName.size() <= 100))
+          && (!('studentAvatar' in data) || (data.studentAvatar is string && data.studentAvatar.size() <= 500))
+          && (!('studentSkills' in data) || (data.studentSkills is string && data.studentSkills.size() <= 500))
+          && (!('studentReputation' in data) || (data.studentReputation is int))
+          && (!('appliedAt' in data) || (data.appliedAt is string && data.appliedAt.size() <= 100))
+          && (!('submissionLink' in data) || (data.submissionLink is string && data.submissionLink.size() <= 500))
+          && (!('submissionText' in data) || (data.submissionText is string && data.submissionText.size() <= 2000));
+      }
+
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(applicationId) && isValidApplication(incoming()) && (request.auth.uid == incoming().studentId || isAdmin());
+      allow update: if isSignedIn() && isValidId(applicationId) && isValidApplication(incoming()) && (
+        request.auth.uid == existing().studentId || 
+        isAdmin() ||
+        // Check if user is the company owner of the related opportunity
+        request.auth.uid == get(/databases/$(database)/documents/opportunities/$(existing().opportunityId)).data.companyId
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // Collection: Ideas
+    // ----------------------------------------------------
+    match /ideas/{ideaId} {
+      function isValidIdea(data) {
+        return data.keys().hasAll(['id', 'title', 'creatorId', 'votesCount'])
+          && data.id is string && data.id.size() <= 100
+          && data.title is string && data.title.size() <= 200
+          && data.creatorId is string && data.creatorId.size() <= 100
+          && data.votesCount is int
+          && (!('description' in data) || (data.description is string && data.description.size() <= 5000))
+          && (!('creatorName' in data) || (data.creatorName is string && data.creatorName.size() <= 100))
+          && (!('creatorAvatar' in data) || (data.creatorAvatar is string && data.creatorAvatar.size() <= 500))
+          && (!('creatorSkills' in data) || (data.creatorSkills is string && data.creatorSkills.size() <= 500))
+          && (!('category' in data) || (data.category is string && data.category.size() <= 100))
+          && (!('votedUserIds' in data) || (data.votedUserIds is list))
+          && (!('coFoundersNeeded' in data) || (data.coFoundersNeeded is bool))
+          && (!('coFoundersJoined' in data) || (data.coFoundersJoined is list))
+          && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 100));
+      }
+
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(ideaId) && isValidIdea(incoming()) && (request.auth.uid == incoming().creatorId || isAdmin());
+      allow update: if isSignedIn() && isValidId(ideaId) && isValidIdea(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // Collection: Notifications
+    // ----------------------------------------------------
+    match /notifications/{notificationId} {
+      function isValidNotification(data) {
+        return data.keys().hasAll(['id', 'userId', 'title', 'message', 'read'])
+          && data.id is string && data.id.size() <= 100
+          && data.userId is string && data.userId.size() <= 100
+          && data.title is string && data.title.size() <= 200
+          && data.message is string && data.message.size() <= 1000
+          && data.read is bool
+          && (!('userRole' in data) || (data.userRole is string && data.userRole.size() <= 50))
+          && (!('type' in data) || (data.type is string && (data.type == 'success' || data.type == 'info' || data.type == 'warning')))
+          && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 100));
+      }
+
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userId == 'admin' && isAdmin());
+      allow create: if isSignedIn() && isValidId(notificationId) && isValidNotification(incoming());
+      allow update: if isSignedIn() && isValidId(notificationId) && isValidNotification(incoming()) && (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // Collection: Reports
+    // ----------------------------------------------------
+    match /reports/{reportId} {
+      function isValidReport(data) {
+        return data.keys().hasAll(['id', 'reporterId', 'reportedId', 'reason', 'status'])
+          && data.id is string && data.id.size() <= 100
+          && data.reporterId is string && data.reporterId.size() <= 100
+          && data.reportedId is string && data.reportedId.size() <= 100
+          && data.reason is string && data.reason.size() <= 2000
+          && data.status is string && (data.status == 'pending' || data.status == 'resolved')
+          && (!('reporterName' in data) || (data.reporterName is string && data.reporterName.size() <= 100))
+          && (!('reportedTitle' in data) || (data.reportedTitle is string && data.reportedTitle.size() <= 200))
+          && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 100));
+      }
+
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidId(reportId) && isValidReport(incoming()) && (request.auth.uid == incoming().reporterId || isAdmin());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}
