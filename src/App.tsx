@@ -8,6 +8,7 @@ import { StudentDashboard } from './components/StudentDashboard';
 import { CompanyDashboard } from './components/CompanyDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { GmailCenter } from './components/GmailCenter';
+import { NewsHub } from './components/NewsHub';
 import { 
   Shield, 
   Menu, 
@@ -23,10 +24,11 @@ import {
   Award,
   LogIn,
   LogOut,
-  Mail
+  Mail,
+  Newspaper
 } from 'lucide-react';
 
-type ViewState = 'home' | 'marketplace' | 'innovation-hub' | 'dashboard' | 'skillpass' | 'gmail';
+type ViewState = 'home' | 'marketplace' | 'innovation-hub' | 'dashboard' | 'skillpass' | 'gmail' | 'news';
 
 const AppContent: React.FC = () => {
   const { 
@@ -40,7 +42,9 @@ const AppContent: React.FC = () => {
     currentUser,
     signInWithGoogle,
     signOutUser,
-    loadingAuth
+    loadingAuth,
+    authError,
+    setAuthError
   } = useApp();
 
   const [currentView, setCurrentView] = useState<ViewState>('home');
@@ -69,6 +73,21 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="bg-[#080603] min-h-screen text-[#f5f1e6] font-sans flex flex-col justify-between relative overflow-hidden">
+      
+      {authError && (
+        <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2.5 text-xs text-amber-200/90 flex items-center justify-between gap-4 animate-in slide-in-from-top duration-300 relative z-50">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>{authError}</span>
+          </div>
+          <button 
+            onClick={() => setAuthError(null)}
+            className="text-amber-400 hover:text-amber-100 font-bold px-2 text-sm cursor-pointer"
+          >
+            ×
+          </button>
+        </div>
+      )}
       
       {/* Background Atmosphere */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-amber-950/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
@@ -122,6 +141,12 @@ const AppContent: React.FC = () => {
           >
             Gig Mail
           </button>
+          <button 
+            onClick={() => { setCurrentView('news'); setSelectedStudentId(undefined); }}
+            className={`transition cursor-pointer ${currentView === 'news' ? 'text-amber-400 font-bold drop-shadow-[0_0_8px_rgba(230,202,101,0.5)]' : 'text-amber-100/60 hover:text-[#fff8dc]'}`}
+          >
+            Web3 News
+          </button>
         </nav>
 
         {/* Action Controls & Role Selectors */}
@@ -130,11 +155,11 @@ const AppContent: React.FC = () => {
           {/* Notifications Icon with Badge */}
           <button 
             onClick={() => setCurrentView('dashboard')}
-            className="p-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white transition relative cursor-pointer"
+            className="p-2 bg-amber-500/5 border border-amber-500/20 rounded-xl text-amber-200/70 hover:text-amber-100 hover:border-amber-400/50 transition relative cursor-pointer"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-cyan-500 text-white w-4 h-4 rounded-full text-[9px] font-bold font-mono flex items-center justify-center animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]">
+              <span className="absolute -top-1 -right-1 bg-amber-500 text-black w-4 h-4 rounded-full text-[9px] font-bold font-mono flex items-center justify-center animate-pulse shadow-[0_0_8px_rgba(230,202,101,0.8)]">
                 {unreadCount}
               </span>
             )}
@@ -144,33 +169,33 @@ const AppContent: React.FC = () => {
           <div className="relative">
             <button 
               onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 flex items-center gap-1.5 transition cursor-pointer select-none"
+              className="bg-[#120e07] hover:bg-[#1a140b] border border-[#e6ca65]/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-amber-100 flex items-center gap-1.5 transition cursor-pointer select-none"
             >
-              <User className="w-3.5 h-3.5 text-cyan-400" />
+              <User className="w-3.5 h-3.5 text-amber-400" />
               <span className="capitalize">{currentRole} Portal</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+              <ChevronDown className="w-3.5 h-3.5 text-amber-500/70" />
             </button>
 
             {roleDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-black border border-white/10 rounded-2xl shadow-2xl p-2.5 space-y-1 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                <p className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest px-2 pb-1.5 border-b border-white/5">
+              <div className="absolute right-0 mt-2 w-48 bg-[#0c0905] border border-[#e6ca65]/20 rounded-2xl shadow-2xl p-2.5 space-y-1 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <p className="text-[9px] font-mono font-bold text-amber-400/50 uppercase tracking-widest px-2 pb-1.5 border-b border-[#e6ca65]/10">
                   Switch Portal View
                 </p>
                 <button 
                   onClick={() => handleSwitchRole('student')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition ${currentRole === 'student' ? 'bg-cyan-500/10 text-cyan-400' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition ${currentRole === 'student' ? 'bg-amber-500/10 text-amber-400 font-bold' : 'text-amber-100/60 hover:bg-white/5 hover:text-[#fbf5b7]'}`}
                 >
                   Student Builder Portal
                 </button>
                 <button 
                   onClick={() => handleSwitchRole('company')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition ${currentRole === 'company' ? 'bg-cyan-500/10 text-cyan-400' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition ${currentRole === 'company' ? 'bg-amber-500/10 text-amber-400 font-bold' : 'text-amber-100/60 hover:bg-white/5 hover:text-[#fbf5b7]'}`}
                 >
                   Partner Company Portal
                 </button>
                 <button 
                   onClick={() => handleSwitchRole('admin')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition ${currentRole === 'admin' ? 'bg-cyan-500/10 text-cyan-400' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition ${currentRole === 'admin' ? 'bg-amber-500/10 text-amber-400 font-bold' : 'text-amber-100/60 hover:bg-white/5 hover:text-[#fbf5b7]'}`}
                 >
                   System Admin Console
                 </button>
@@ -180,19 +205,19 @@ const AppContent: React.FC = () => {
 
           {/* Google Auth Integration Widget */}
           {loadingAuth ? (
-            <div className="w-8 h-8 rounded-xl border border-white/5 bg-white/5 animate-pulse"></div>
+            <div className="w-8 h-8 rounded-xl border border-amber-500/10 bg-amber-500/5 animate-pulse"></div>
           ) : currentUser && !currentUser.isAnonymous ? (
             <div className="flex items-center gap-2">
               <img 
                 src={currentUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'} 
                 alt="Profile" 
-                className="w-7 h-7 rounded-full border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+                className="w-7 h-7 rounded-full border border-amber-400/60 shadow-[0_0_10px_rgba(230,202,101,0.3)]"
                 referrerPolicy="no-referrer"
               />
               <button 
                 onClick={signOutUser}
                 title="Sign Out"
-                className="p-1.5 bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 rounded-xl text-slate-400 transition cursor-pointer"
+                className="p-1.5 bg-[#120e07] hover:bg-red-950/40 hover:text-red-400 border border-[#e6ca65]/20 hover:border-red-500/35 rounded-xl text-amber-200/60 transition cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
@@ -200,9 +225,9 @@ const AppContent: React.FC = () => {
           ) : (
             <button 
               onClick={signInWithGoogle}
-              className="bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 hover:from-cyan-500/25 hover:to-indigo-500/25 border border-cyan-500/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-cyan-300 flex items-center gap-1.5 transition cursor-pointer select-none"
+              className="premium-button-gold px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer select-none"
             >
-              <LogIn className="w-3.5 h-3.5 text-cyan-400" />
+              <LogIn className="w-3.5 h-3.5 text-black" />
               <span className="hidden sm:inline">Google Auth</span>
             </button>
           )}
@@ -210,7 +235,7 @@ const AppContent: React.FC = () => {
           {/* Mobile hamburger menu toggle */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 cursor-pointer"
+            className="md:hidden p-2 bg-amber-500/5 border border-amber-500/20 rounded-xl text-amber-200/70 hover:text-amber-100 hover:border-amber-400/50 cursor-pointer"
           >
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
@@ -251,6 +276,12 @@ const AppContent: React.FC = () => {
               className={`text-left transition cursor-pointer ${currentView === 'gmail' ? 'text-cyan-400' : 'text-slate-400'}`}
             >
               Gig Mail (Gmail)
+            </button>
+            <button 
+              onClick={() => { setCurrentView('news'); setMobileMenuOpen(false); }}
+              className={`text-left transition cursor-pointer ${currentView === 'news' ? 'text-cyan-400' : 'text-slate-400'}`}
+            >
+              Web3 News Hub
             </button>
           </nav>
         </div>
@@ -316,6 +347,10 @@ const AppContent: React.FC = () => {
 
         {currentView === 'gmail' && (
           <GmailCenter />
+        )}
+
+        {currentView === 'news' && (
+          <NewsHub />
         )}
       </main>
 

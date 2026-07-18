@@ -722,7 +722,7 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNaviga
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Every milestone budget on Funngro Web3 is securely verified. Bounties are released autonomously directly to the student’s wallet upon milestone satisfaction verification.
+                  Every milestone budget on Skill Chain India is securely verified. Bounties are released autonomously directly to the student’s wallet upon milestone satisfaction verification.
                 </p>
               </div>
 

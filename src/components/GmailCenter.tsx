@@ -196,7 +196,7 @@ export const GmailCenter: React.FC = () => {
           <p>${body.replace(/\n/g, '<br/>')}</p>
           <br/>
           <hr style="border: 0; border-top: 1px solid #eee;" />
-          <p style="font-size: 11px; color: #888;">Sent securely via FUNNGRO Web3 Gig Mail Integration.</p>
+          <p style="font-size: 11px; color: #888;">Sent securely via Skill Chain India Gig Mail Integration.</p>
          </div>`
       ].join('\r\n');
 
@@ -315,7 +315,7 @@ export const GmailCenter: React.FC = () => {
   const openComposeTo = (emailAddress: string, defaultSubject: string) => {
     setTo(emailAddress);
     setSubject(defaultSubject);
-    setBody(`Hello,\n\nI am contacting you regarding our project on FUNNGRO Web3 Student Gig Marketplace.\n\nBest regards,\n${currentUser?.displayName || 'Web3 Builder'}`);
+    setBody(`Hello,\n\nI am contacting you regarding our project on Skill Chain India Student Gig Marketplace.\n\nBest regards,\n${currentUser?.displayName || 'Web3 Builder'}`);
     setShowCompose(true);
   };
 
@@ -340,7 +340,7 @@ export const GmailCenter: React.FC = () => {
         <div className="space-y-1.5">
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2.5 text-white">
             <Mail className="w-8 h-8 text-cyan-400" />
-            FUNNGRO Gig Mail
+            Skill Chain India Gig Mail
           </h1>
           <p className="text-slate-400 text-sm">
             Sync, read, and write official communications with Web3 builders and recruiters via Google Gmail API.
@@ -415,7 +415,7 @@ export const GmailCenter: React.FC = () => {
             </button>
           </div>
           <p className="text-[10px] text-slate-500 font-mono">
-            FUNNGRO strictly secures your access token in-memory and will never store or leak your credentials.
+            Skill Chain India strictly secures your access token in-memory and will never store or leak your credentials.
           </p>
         </div>
       ) : (
@@ -435,7 +435,7 @@ export const GmailCenter: React.FC = () => {
                   students.slice(0, 5).map(s => (
                     <button
                       key={s.id}
-                      onClick={() => openComposeTo(s.email, `FUNNGRO Gig Opportunity Update - ${currentCompany?.name}`)}
+                      onClick={() => openComposeTo(s.email, `Skill Chain India Gig Opportunity Update - ${currentCompany?.name}`)}
                       className="w-full text-left bg-black/40 hover:bg-white/5 border border-white/5 hover:border-white/10 px-3 py-2.5 rounded-xl transition flex items-center gap-3 group"
                     >
                       <img src={s.avatar} alt={s.name} className="w-7 h-7 rounded-full object-cover border border-cyan-500/20" />
@@ -450,13 +450,13 @@ export const GmailCenter: React.FC = () => {
                   opportunities.slice(0, 5).map(o => (
                     <button
                       key={o.id}
-                      onClick={() => openComposeTo("recruiter@funngrogigs.org", `Application Inquiry: ${o.title}`)}
+                      onClick={() => openComposeTo("recruiter@skillchainindia.org", `Application Inquiry: ${o.title}`)}
                       className="w-full text-left bg-black/40 hover:bg-white/5 border border-white/5 hover:border-white/10 px-3 py-2.5 rounded-xl transition flex items-center gap-3 group"
                     >
                       <img src={o.companyLogo} alt={o.companyName} className="w-7 h-7 rounded-full object-cover border border-cyan-500/20" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-white truncate group-hover:text-cyan-400 transition">{o.companyName}</p>
-                        <p className="text-[9px] text-slate-500 truncate font-mono">recruiter@funngrogigs.org</p>
+                        <p className="text-[9px] text-slate-500 truncate font-mono">recruiter@skillchainindia.org</p>
                       </div>
                     </button>
                   ))
@@ -470,7 +470,7 @@ export const GmailCenter: React.FC = () => {
                 Security Warning
               </h4>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Always ensure you verify the email headers before taking action on payments or project feedback. Official administrators will communicate exclusively through <strong>support@funngrogigs.com</strong>.
+                Always ensure you verify the email headers before taking action on payments or project feedback. Official administrators will communicate exclusively through <strong>support@skillchainindia.com</strong>.
               </p>
             </div>
           </div>
@@ -683,7 +683,7 @@ export const GmailCenter: React.FC = () => {
                   <input 
                     type="text"
                     required
-                    placeholder="Funngro Gig: UI/UX Redesign Application Approved"
+                    placeholder="Skill Chain India Gig: UI/UX Redesign Application Approved"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 placeholder:text-slate-600 transition"

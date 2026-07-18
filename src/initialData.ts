@@ -55,7 +55,7 @@ export const initialStudents: Student[] = [
         badgeType: 'React Master',
         ipfsHash: 'ipfs://QmZ4Y3D2t...FHDj',
         transactionHash: '0x9a8f12...34bc',
-        issuedBy: 'Funngro Web3 Platform',
+        issuedBy: 'Skill Chain India',
         issuedAt: '2026-05-18',
         status: 'approved'
       }
@@ -135,7 +135,7 @@ export const initialStudents: Student[] = [
         badgeType: 'Top Performer',
         ipfsHash: 'ipfs://QmUX62Jd...831f',
         transactionHash: '0x12bc6d...bc72',
-        issuedBy: 'Funngro Community',
+        issuedBy: 'Skill Chain India',
         issuedAt: '2026-06-14',
         status: 'approved'
       }
@@ -479,7 +479,7 @@ export const initialNotifications: AppNotification[] = [
     id: 'notif-3',
     userId: 'student-current',
     userRole: 'student',
-    title: 'Welcome to Funngro Web3',
+    title: 'Welcome to Skill Chain India',
     message: 'Welcome Alex! Connect your MetaMask wallet to verify your Student SkillPass on the Polygon Amoy blockchain.',
     type: 'success',
     createdAt: '2026-07-14',

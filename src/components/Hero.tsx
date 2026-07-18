@@ -294,9 +294,9 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onSelectStudent }) => {
       <footer className="border-t border-white/5 py-12 px-4 text-center text-slate-500 text-sm font-sans" id="footer-section">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-wider text-white">FUNNGRO <span className="text-cyan-400 font-mono text-lg">WEB3</span></span>
+            <span className="text-2xl font-bold tracking-wider text-white">SKILL CHAIN <span className="text-amber-400 font-mono text-lg">INDIA</span></span>
           </div>
-          <p>© 2026 Funngro Web3 Platform. Built securely on the Polygon network.</p>
+          <p>© 2026 Skill Chain India. Built securely on the Polygon network.</p>
           <div className="flex gap-4">
             <span className="hover:text-white transition cursor-pointer">Privacy Policy</span>
             <span>•</span>

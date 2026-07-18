@@ -12,7 +12,10 @@ import {
   ExternalLink,
   Award,
   Trash2,
-  ThumbsUp
+  ThumbsUp,
+  Eye,
+  EyeOff,
+  Key
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -27,6 +30,33 @@ export const AdminDashboard: React.FC = () => {
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState<'verification' | 'achievements' | 'reports'>('verification');
+
+  // Password-restricted access logic
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('adminUnlocked') === 'true';
+  });
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  const handleVerifyPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === 'Skill420@') {
+      setIsAdminAuthenticated(true);
+      sessionStorage.setItem('adminUnlocked', 'true');
+      setPasswordError(null);
+      triggerToast('Administrative console decrypted and authorized!');
+    } else {
+      setPasswordError('Cryptographic Verification Failed: Invalid Administrative Key.');
+    }
+  };
+
+  const handleLockConsole = () => {
+    setIsAdminAuthenticated(false);
+    sessionStorage.removeItem('adminUnlocked');
+    setPasswordInput('');
+    triggerToast('Administrative console locked. Credentials cleared.');
+  };
 
   // Filter unverified companies
   const unverifiedCompanies = companies.filter(c => !c.isVerified);
@@ -53,6 +83,85 @@ export const AdminDashboard: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
+  if (!isAdminAuthenticated) {
+    return (
+      <div className="bg-transparent text-slate-300 min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" id="admin-lock-screen">
+        {/* Toast Alert */}
+        {toast && (
+          <div className="fixed bottom-6 right-6 z-50 bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white px-6 py-3 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.4)] border border-cyan-400 text-sm font-medium animate-bounce">
+            {toast}
+          </div>
+        )}
+
+        <div className="max-w-md w-full space-y-8 bg-[#0c0905]/85 border border-[#e6ca65]/20 rounded-3xl p-8 sm:p-10 shadow-[0_0_50px_rgba(230,202,101,0.05)] backdrop-blur-xl relative z-10 animate-in fade-in zoom-in-95 duration-300">
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-700 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(230,202,101,0.3)] border border-[#e6ca65]/30">
+            <Lock className="w-10 h-10 text-black animate-pulse" />
+          </div>
+
+          <div className="text-center pt-8">
+            <h2 className="text-2xl font-serif-lux font-black tracking-widest text-[#fbf5b7]">
+              ADMIN DECRYPT ZONE
+            </h2>
+            <p className="mt-3 text-xs text-amber-200/60 leading-relaxed font-sans">
+              This area contains cryptographic relayer keys, on-chain compliance triggers, and manual verification bypasses. Only authorized Skill Chain India operators may proceed.
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyPassword} className="mt-8 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono uppercase tracking-widest text-amber-400/70 block">
+                Administrative Secret Key
+              </label>
+              <div className="relative rounded-xl border border-[#e6ca65]/20 bg-[#120e07] focus-within:border-amber-400/60 transition group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-amber-500/55 group-focus-within:text-amber-400 transition">
+                  <Key className="h-4 w-4" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError(null);
+                  }}
+                  placeholder="••••••••••••"
+                  required
+                  className="block w-full pl-10 pr-10 py-3 bg-transparent text-sm text-[#f5f1e6] placeholder-amber-500/30 focus:outline-none rounded-xl"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-amber-500/50 hover:text-amber-300 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {passwordError && (
+                <div className="flex items-center gap-1.5 text-rose-500/90 text-[11px] font-medium pt-1 animate-in slide-in-from-top-1">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full premium-button-gold py-3 px-4 rounded-xl text-xs font-bold font-mono tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(230,202,101,0.15)] transition-transform active:scale-[0.98]"
+            >
+              <Shield className="w-4 h-4 text-black" />
+              AUTHORIZE & DECRYPT
+            </button>
+          </form>
+
+          <div className="pt-2 border-t border-white/5 flex justify-center items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Relayer Standby: AES-256 Enabled</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-transparent text-slate-300 min-h-screen py-8 px-4 sm:px-6 lg:px-8" id="admin-dashboard">
       {/* Toast Alert */}
@@ -73,9 +182,18 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-slate-400 text-sm mt-1">Manage verification workflows, Polygon smart contracts audits, and reports.</p>
             </div>
           </div>
-          <span className="bg-cyan-950/40 border border-cyan-500/20 text-cyan-400 px-3.5 py-1.5 rounded-xl text-xs font-mono">
-            SECURE ACCESS: LEVEL 4 ADMIN
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLockConsole}
+              className="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Lock Console
+            </button>
+            <span className="bg-cyan-950/40 border border-cyan-500/20 text-cyan-400 px-3.5 py-1.5 rounded-xl text-xs font-mono">
+              SECURE ACCESS: LEVEL 4 ADMIN
+            </span>
+          </div>
         </div>
 
         {/* Global Statistics Grid */}
