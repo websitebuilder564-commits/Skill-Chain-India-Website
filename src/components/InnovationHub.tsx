@@ -35,11 +35,19 @@ export const InnovationHub: React.FC<InnovationHubProps> = ({ onBackToHome, onNa
 
   // Team Finder Selected Skills
   const [finderSkills, setFinderSkills] = useState<string[]>([]);
+
+  // User notifications / feedback toast
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const categories: InnovationIdea['category'][] = ['Programming', 'UI/UX', 'Blockchain', 'AI', 'Marketing', 'Business', 'Other'];
 
   const handleCreateIdea = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentStudent) {
+      setErrorMessage("Please sign in as a student to pitch startup concepts!");
+      setTimeout(() => setErrorMessage(null), 4000);
+      return;
+    }
     if (!newTitle || !newDesc) return;
     createIdea(newTitle, newDesc, newCategory, coFoundersNeeded);
     
@@ -50,7 +58,30 @@ export const InnovationHub: React.FC<InnovationHubProps> = ({ onBackToHome, onNa
     setShowCreateModal(false);
   };
 
+  const handleVote = (ideaId: string) => {
+    if (!currentStudent) {
+      setErrorMessage("Please sign in as a student to upvote and support startup ideas!");
+      setTimeout(() => setErrorMessage(null), 4000);
+      return;
+    }
+    voteOnIdea(ideaId);
+  };
+
+  const handleJoinTeam = (ideaId: string) => {
+    if (!currentStudent) {
+      setErrorMessage("Please sign in as a student to join startup teams!");
+      setTimeout(() => setErrorMessage(null), 4000);
+      return;
+    }
+    joinIdeaTeam(ideaId);
+  };
+
   const handlePostComment = (ideaId: string) => {
+    if (!currentStudent) {
+      setErrorMessage("Please sign in as a student to review and comment!");
+      setTimeout(() => setErrorMessage(null), 4000);
+      return;
+    }
     if (!commentText) return;
     addCommentToIdea(ideaId, commentText);
     setCommentText('');
@@ -99,7 +130,14 @@ export const InnovationHub: React.FC<InnovationHubProps> = ({ onBackToHome, onNa
               Back Home
             </button>
             <button 
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => {
+                if (!currentStudent) {
+                  setErrorMessage("Please sign in as a student to pitch startup concepts!");
+                  setTimeout(() => setErrorMessage(null), 4000);
+                  return;
+                }
+                setShowCreateModal(true);
+              }}
               className="px-4 py-2 bg-gradient-to-tr from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 rounded-xl text-white text-sm font-medium transition flex items-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.4)]"
             >
               <Plus className="w-4 h-4" />
@@ -205,10 +243,11 @@ export const InnovationHub: React.FC<InnovationHubProps> = ({ onBackToHome, onNa
                           </div>
                         </div>
 
-                        {/* Vote Counter Badge */}
+                        {/* Vote Counter Badge (Top Right) */}
                         <button 
-                          onClick={() => voteOnIdea(idea.id)}
+                          onClick={() => handleVote(idea.id)}
                           className={`flex flex-col items-center justify-center p-3 rounded-xl border transition ${hasVoted ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-black border-white/10 text-slate-500 hover:text-slate-300'}`}
+                          title="Community Upvote"
                         >
                           <ThumbsUp className={`w-5 h-5 ${hasVoted ? 'fill-current' : ''}`} />
                           <span className="text-sm font-bold font-mono mt-1">{idea.votesCount}</span>
@@ -227,7 +266,7 @@ export const InnovationHub: React.FC<InnovationHubProps> = ({ onBackToHome, onNa
                           </div>
                           {!isCreator && !idea.coFoundersJoined.includes(currentStudent?.id || '') ? (
                             <button 
-                              onClick={() => joinIdeaTeam(idea.id)}
+                              onClick={() => handleJoinTeam(idea.id)}
                               className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-xs transition cursor-pointer"
                             >
                               Join Team
@@ -240,16 +279,34 @@ export const InnovationHub: React.FC<InnovationHubProps> = ({ onBackToHome, onNa
                         </div>
                       )}
 
-                      {/* Action buttons: comments */}
-                      <div className="flex items-center gap-6 pt-3 border-t border-white/5 text-xs">
-                        <button 
-                          onClick={() => setActiveIdeaId(activeIdeaId === idea.id ? null : idea.id)}
-                          className="text-slate-400 hover:text-white flex items-center gap-2 transition cursor-pointer"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                          <span>Comments ({idea.comments.length})</span>
-                        </button>
-                        <span className="text-slate-600 font-mono">Published {idea.createdAt}</span>
+                      {/* Action buttons: comments & Community Upvote button */}
+                      <div className="flex items-center justify-between pt-3 border-t border-white/5 text-xs">
+                        <div className="flex items-center gap-4 sm:gap-6">
+                          <button 
+                            onClick={() => setActiveIdeaId(activeIdeaId === idea.id ? null : idea.id)}
+                            className="text-slate-400 hover:text-white flex items-center gap-2 transition cursor-pointer"
+                          >
+                            <MessageSquare className="w-4 h-4 text-cyan-400/80" />
+                            <span>Comments ({idea.comments.length})</span>
+                          </button>
+
+                          <button 
+                            onClick={() => handleVote(idea.id)}
+                            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border transition cursor-pointer font-semibold ${
+                              hasVoted 
+                                ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.15)]' 
+                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10 hover:border-white/20'
+                            }`}
+                            id={`community-upvote-${idea.id}`}
+                          >
+                            <ThumbsUp className={`w-3.5 h-3.5 ${hasVoted ? 'fill-current text-cyan-400' : ''}`} />
+                            <span>Community Upvote</span>
+                            <span className="bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded font-mono text-[10px]">
+                              {idea.votesCount || 0}
+                            </span>
+                          </button>
+                        </div>
+                        <span className="text-slate-600 font-mono text-[10px] hidden sm:inline">Published {idea.createdAt}</span>
                       </div>
 
                       {/* Comment panel expansion */}
@@ -473,6 +530,15 @@ export const InnovationHub: React.FC<InnovationHubProps> = ({ onBackToHome, onNa
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Floating feedback notification toast */}
+      {errorMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0a0a0f]/90 border border-rose-500/30 text-rose-300 px-5 py-3.5 rounded-2xl shadow-[0_0_20px_rgba(244,63,94,0.15)] flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300 backdrop-blur-md">
+          <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></div>
+          <span className="text-sm font-medium">{errorMessage}</span>
+          <button onClick={() => setErrorMessage(null)} className="text-rose-400 hover:text-white ml-2 text-xs">✕</button>
         </div>
       )}
 

@@ -51,7 +51,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // Filter recommendations based on skills
   const recommendations = opportunities.filter(o => 
     o.status === 'open' && 
-    o.requiredSkills.some(skill => currentStudent?.skills.includes(skill))
+    o.requiredSkills.some(skill => currentStudent?.skills?.includes(skill))
   ).slice(0, 3);
 
   // Leaderboard sorting

@@ -29,6 +29,9 @@ app.post("/api/ai/match", async (req, res) => {
   }
 
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not defined. Please configure it in Settings > Secrets.");
+    }
     const prompt = `You are the ultimate Web3 Recruitment AI Counselor for "Skill Chain India" (a premium digital talent marketplace).
 Analyze how well this student fits this gig opportunity, and generate a customized high-end premium evaluation report.
 
@@ -124,6 +127,9 @@ app.post("/api/ai/generate-agreement", async (req, res) => {
   const { studentName, companyName, projectTitle, budget, description } = req.body;
 
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not defined. Please configure it in Settings > Secrets.");
+    }
     const prompt = `Draft a premium, elegant Web3 micro-project agreement for:
 - Freelancer/Student: ${studentName}
 - Recruiter/Company: ${companyName}
@@ -196,6 +202,9 @@ app.post("/api/ai/chat", async (req, res) => {
   }
 
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not defined. Please configure it in Settings > Secrets.");
+    }
     // Transform chat messages into Gemini Content structure
     const contents = messages.map((m: any) => ({
       role: m.role === "user" ? "user" : "model",
@@ -280,6 +289,9 @@ app.get("/api/ai/news", async (req, res) => {
   }
 
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not defined. Please configure it in Settings > Secrets.");
+    }
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: searchQuery,

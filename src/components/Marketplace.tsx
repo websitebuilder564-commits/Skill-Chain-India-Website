@@ -6,9 +6,10 @@ import { Opportunity } from '../types';
 interface MarketplaceProps {
   onBackToHome: () => void;
   onNavigateToDashboard: () => void;
+  onNavigateToLogin: () => void;
 }
 
-export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNavigateToDashboard }) => {
+export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNavigateToDashboard, onNavigateToLogin }) => {
   const { 
     opportunities, 
     applyToOpportunity, 
@@ -16,8 +17,12 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNaviga
     currentStudent, 
     savedOpportunityIds, 
     toggleSaveOpportunity,
-    submitReport 
+    submitReport,
+    currentUser
   } = useApp();
+
+  const isLoggedIn = currentUser && (!currentUser.isAnonymous || sessionStorage.getItem('phone_auth_user') === 'true');
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
@@ -625,10 +630,14 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNaviga
                         <h5 className="text-xs font-mono text-amber-400 uppercase tracking-widest">AI Crafted Proposal Draft</h5>
                         <button
                           onClick={() => {
-                            setSubComment(aiReport.draftProposal);
-                            setApplying(true);
-                            setToast("Successfully loaded proposal into pitch! Ready for submission.");
-                            setTimeout(() => setToast(null), 3000);
+                            if (!isLoggedIn) {
+                              setShowLoginPrompt(true);
+                            } else {
+                              setSubComment(aiReport.draftProposal);
+                              setApplying(true);
+                              setToast("Successfully loaded proposal into pitch! Ready for submission.");
+                              setTimeout(() => setToast(null), 3000);
+                            }
                           }}
                           className="text-[11px] text-[#0c0904] font-bold bg-amber-400 hover:bg-amber-300 px-3 py-1 rounded transition cursor-pointer flex items-center gap-1"
                         >
@@ -821,13 +830,59 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onBackToHome, onNaviga
               
               {!applying && (
                 <button 
-                  onClick={() => setApplying(true)}
+                  onClick={() => {
+                    if (!isLoggedIn) {
+                      setShowLoginPrompt(true);
+                    } else {
+                      setApplying(true);
+                    }
+                  }}
                   disabled={applications.some(a => a.opportunityId === selectedOpp.id && a.studentId === currentStudent?.id)}
                   className={`px-8 py-3.5 rounded-xl font-medium transition cursor-pointer ${applications.some(a => a.opportunityId === selectedOpp.id && a.studentId === currentStudent?.id) ? 'bg-white/5 border border-white/5 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-tr from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)]'}`}
                 >
                   {applications.some(a => a.opportunityId === selectedOpp.id && a.studentId === currentStudent?.id) ? 'Already Applied' : 'Submit Application'}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LOGIN PROMPT MODAL */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="max-w-sm w-full bg-[#0c0905] border border-[#e6ca65]/20 rounded-3xl p-6 shadow-[0_0_50px_rgba(230,202,101,0.1)] relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#e6ca65]/35 to-transparent"></div>
+            
+            <div className="space-y-4 text-center">
+              <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/30 text-amber-400 mx-auto">
+                <Shield className="w-6 h-6 animate-pulse" />
+              </div>
+              
+              <div className="space-y-1">
+                <h3 className="text-lg font-serif-lux font-bold text-[#fbf5b7]">Authentication Required</h3>
+                <p className="text-xs text-amber-100/60 leading-relaxed">
+                  You must sign in or register your student portfolio to apply for gig opportunities on Skill Chain India.
+                </p>
+              </div>
+
+              <div className="pt-2 flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    setShowLoginPrompt(false);
+                    onNavigateToLogin();
+                  }}
+                  className="w-full premium-button-gold py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(230,202,101,0.2)]"
+                >
+                  Sign In / Join Now
+                </button>
+                <button
+                  onClick={() => setShowLoginPrompt(false)}
+                  className="w-full py-2.5 px-4 rounded-xl border border-white/5 hover:bg-white/5 text-slate-400 hover:text-slate-200 text-xs font-semibold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

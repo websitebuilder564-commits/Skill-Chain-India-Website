@@ -9,6 +9,9 @@ import { CompanyDashboard } from './components/CompanyDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { GmailCenter } from './components/GmailCenter';
 import { NewsHub } from './components/NewsHub';
+import { DashboardLockScreen } from './components/DashboardLockScreen';
+import { PhoneLogin } from './components/PhoneLogin';
+import { ProfileModal } from './components/ProfileModal';
 import { 
   Shield, 
   Menu, 
@@ -25,10 +28,12 @@ import {
   LogIn,
   LogOut,
   Mail,
-  Newspaper
+  Newspaper,
+  Lock,
+  Unlock
 } from 'lucide-react';
 
-type ViewState = 'home' | 'marketplace' | 'innovation-hub' | 'dashboard' | 'skillpass' | 'gmail' | 'news';
+type ViewState = 'home' | 'marketplace' | 'innovation-hub' | 'dashboard' | 'skillpass' | 'gmail' | 'news' | 'login';
 
 const AppContent: React.FC = () => {
   const { 
@@ -44,13 +49,17 @@ const AppContent: React.FC = () => {
     signOutUser,
     loadingAuth,
     authError,
-    setAuthError
+    setAuthError,
+    isDashboardUnlocked,
+    verifyDashboardPassword,
+    lockDashboard
   } = useApp();
 
   const [currentView, setCurrentView] = useState<ViewState>('home');
   const [selectedStudentId, setSelectedStudentId] = useState<string | undefined>(undefined);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   // Active unread notifications
   const unreadCount = notifications.filter(n => {
@@ -203,32 +212,33 @@ const AppContent: React.FC = () => {
             )}
           </div>
 
-          {/* Google Auth Integration Widget */}
+          {/* Custom Web3 Auth / Phone Integration Widget */}
           {loadingAuth ? (
             <div className="w-8 h-8 rounded-xl border border-amber-500/10 bg-amber-500/5 animate-pulse"></div>
-          ) : currentUser && !currentUser.isAnonymous ? (
+          ) : (currentUser && (!currentUser.isAnonymous || sessionStorage.getItem('phone_auth_user') === 'true')) ? (
             <div className="flex items-center gap-2">
-              <img 
-                src={currentUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'} 
-                alt="Profile" 
-                className="w-7 h-7 rounded-full border border-amber-400/60 shadow-[0_0_10px_rgba(230,202,101,0.3)]"
-                referrerPolicy="no-referrer"
-              />
               <button 
-                onClick={signOutUser}
-                title="Sign Out"
-                className="p-1.5 bg-[#120e07] hover:bg-red-950/40 hover:text-red-400 border border-[#e6ca65]/20 hover:border-red-500/35 rounded-xl text-amber-200/60 transition cursor-pointer"
+                onClick={() => setProfileModalOpen(true)}
+                className="flex items-center gap-2 bg-[#120e07] hover:bg-[#1a140b] border border-[#e6ca65]/35 hover:border-amber-400/60 px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-100 transition cursor-pointer select-none"
+                title="View Builder Passport (History, Policies, Support)"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <img 
+                  src={currentStudent?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'} 
+                  alt="Profile" 
+                  className="w-5 h-5 rounded-full border border-amber-400/60 object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                <span className="max-w-[85px] truncate hidden sm:inline">{currentStudent?.name || 'Passport'}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
               </button>
             </div>
           ) : (
             <button 
-              onClick={signInWithGoogle}
+              onClick={() => setCurrentView('login')}
               className="premium-button-gold px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer select-none"
             >
               <LogIn className="w-3.5 h-3.5 text-black" />
-              <span className="hidden sm:inline">Google Auth</span>
+              <span>Sign In / Join</span>
             </button>
           )}
 
@@ -304,6 +314,7 @@ const AppContent: React.FC = () => {
           <Marketplace 
             onBackToHome={() => setCurrentView('home')}
             onNavigateToDashboard={() => setCurrentView('dashboard')}
+            onNavigateToLogin={() => setCurrentView('login')}
           />
         )}
 
@@ -328,19 +339,36 @@ const AppContent: React.FC = () => {
 
         {currentView === 'dashboard' && (
           <>
-            {currentRole === 'student' && (
-              <StudentDashboard 
-                onNavigateToMarketplace={() => setCurrentView('marketplace')}
-                onNavigateToSkillPass={() => { setSelectedStudentId(undefined); setCurrentView('skillpass'); }}
-                onNavigateToInnovation={() => setCurrentView('innovation-hub')}
-                onSelectStudent={handleSelectStudentProfile}
-              />
-            )}
-            {currentRole === 'company' && (
-              <CompanyDashboard />
-            )}
-            {currentRole === 'admin' && (
-              <AdminDashboard />
+            {!isDashboardUnlocked ? (
+              <DashboardLockScreen onUnlock={verifyDashboardPassword} />
+            ) : (
+              <>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex justify-end">
+                  <button
+                    onClick={lockDashboard}
+                    className="flex items-center gap-1.5 bg-amber-500/5 hover:bg-amber-500/10 text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                    title="Lock dashboard to prevent unauthorized viewing"
+                  >
+                    <Unlock className="w-3.5 h-3.5" />
+                    <span>Portal Authorized</span>
+                    <span className="text-[10px] font-mono text-amber-500/50 bg-black/40 px-1.5 py-0.5 rounded">Lock</span>
+                  </button>
+                </div>
+                {currentRole === 'student' && (
+                  <StudentDashboard 
+                    onNavigateToMarketplace={() => setCurrentView('marketplace')}
+                    onNavigateToSkillPass={() => { setSelectedStudentId(undefined); setCurrentView('skillpass'); }}
+                    onNavigateToInnovation={() => setCurrentView('innovation-hub')}
+                    onSelectStudent={handleSelectStudentProfile}
+                  />
+                )}
+                {currentRole === 'company' && (
+                  <CompanyDashboard />
+                )}
+                {currentRole === 'admin' && (
+                  <AdminDashboard />
+                )}
+              </>
             )}
           </>
         )}
@@ -351,6 +379,13 @@ const AppContent: React.FC = () => {
 
         {currentView === 'news' && (
           <NewsHub />
+        )}
+
+        {currentView === 'login' && (
+          <PhoneLogin 
+            onSuccess={() => setCurrentView('home')} 
+            onCancel={() => setCurrentView('home')} 
+          />
         )}
       </main>
 
@@ -392,6 +427,12 @@ const AppContent: React.FC = () => {
           <span className="text-[10px] font-medium">Dashboard</span>
         </button>
       </footer>
+
+      {/* Global Profile Modal drawer overlay */}
+      <ProfileModal 
+        isOpen={profileModalOpen} 
+        onClose={() => setProfileModalOpen(false)} 
+      />
 
     </div>
   );

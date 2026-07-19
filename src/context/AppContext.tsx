@@ -13,7 +13,9 @@ import {
   getDocs, 
   doc, 
   setDoc, 
-  getDoc 
+  getDoc,
+  query,
+  where
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { setDocument, updateDocument } from '../lib/firestoreService';
@@ -82,6 +84,18 @@ interface AppContextType {
   savedOpportunityIds: string[];
   toggleSaveOpportunity: (id: string) => void;
   submitReport: (reportedId: string, reportedTitle: string, reason: string) => Promise<void>;
+  isDashboardUnlocked: boolean;
+  verifyDashboardPassword: (password: string) => Promise<boolean>;
+  lockDashboard: () => void;
+  registerPhoneUser: (details: {
+    phone: string;
+    name: string;
+    email: string;
+    school: string;
+    skills: string[];
+    availability: 'Full-time' | 'Part-time' | 'Intermittent' | 'Unavailable';
+  }) => Promise<void>;
+  loginPhoneUser: (phone: string) => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -108,6 +122,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [gmailAccessToken, setGmailAccessToken] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  const [isDashboardUnlocked, setIsDashboardUnlocked] = useState<boolean>(() => {
+    return sessionStorage.getItem('dashboard_unlocked') === 'true';
+  });
+  const [dbPassword, setDbPassword] = useState<string>('skillchain@14qpe*');
 
   // Sync saved opportunites locally
   useEffect(() => {
@@ -149,6 +168,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         for (const report of initialReports) {
           await setDoc(doc(db, 'reports', report.id), report);
         }
+        // Seed settings
+        await setDoc(doc(db, 'settings', 'security'), {
+          id: 'security',
+          dashboardPassword: 'skillchain@14qpe*//'
+        });
         console.log("Firestore seeding completed successfully!");
       }
     } catch (e) {
@@ -242,6 +266,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       await signOut(auth);
       setGmailAccessToken(null);
+      sessionStorage.removeItem('phone_auth_user');
+      sessionStorage.removeItem('phone_auth_uid');
+      sessionStorage.removeItem('phone_auth_name');
+      sessionStorage.removeItem('phone_auth_email');
+      sessionStorage.removeItem('dashboard_unlocked');
+      setCurrentUser(null);
     } catch (error) {
       console.error("Sign-Out Error: ", error);
     }
@@ -293,18 +323,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setCurrentRole('admin');
         }
       } else {
-        // Automatically sign in anonymously to satisfy secure firestore rules without friction
-        setCurrentUser(null);
-        setGmailAccessToken(null);
-        try {
-          await signInAnonymously(auth);
-        } catch (err: any) {
-          if (err?.code === 'auth/admin-restricted-operation' || err?.message?.includes('admin-restricted-operation')) {
-            console.log("Anonymous authentication is disabled in the Firebase Console. The application will run in local-first fallback mode until signed in with Google.");
-          } else {
-            console.warn("Could not establish anonymous connection:", err);
-          }
+        // If there is a simulated phone user session, restore it
+        if (sessionStorage.getItem('phone_auth_user') === 'true') {
+          const simulatedUid = sessionStorage.getItem('phone_auth_uid') || 'phone_simulated_user';
+          const mockUser = {
+            uid: simulatedUid,
+            displayName: sessionStorage.getItem('phone_auth_name') || 'Phone Builder',
+            email: sessionStorage.getItem('phone_auth_email') || '',
+            isAnonymous: true,
+            photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+            providerData: []
+          } as any;
+          setCurrentUser(mockUser);
           setLoadingAuth(false);
+          await seedDatabaseIfNeeded();
+        } else {
+          // Automatically sign in anonymously to satisfy secure firestore rules without friction
+          setCurrentUser(null);
+          setGmailAccessToken(null);
+          try {
+            await signInAnonymously(auth);
+          } catch (err: any) {
+            if (err?.code === 'auth/admin-restricted-operation' || err?.message?.includes('admin-restricted-operation')) {
+              console.log("Anonymous authentication is disabled in the Firebase Console. The application will run in local-first fallback mode until signed in with Google.");
+            } else {
+              console.warn("Could not establish anonymous connection:", err);
+            }
+            setLoadingAuth(false);
+          }
         }
       }
     });
@@ -351,19 +397,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIdeas(list);
     }, (err) => console.error("Ideas sync error:", err));
 
-    // Notifications Sync
-    const unsubNotifs = onSnapshot(collection(db, 'notifications'), (snap) => {
+    // Notifications Sync - Secured query (Filter by current user's ID to satisfy security rules)
+    const notificationsQuery = query(collection(db, 'notifications'), where('userId', '==', currentUser.uid));
+    const unsubNotifs = onSnapshot(notificationsQuery, (snap) => {
       const list: AppNotification[] = [];
       snap.forEach(d => list.push(d.data() as AppNotification));
       setNotifications(list);
     }, (err) => console.error("Notifications sync error:", err));
 
-    // Reports Sync
-    const unsubReports = onSnapshot(collection(db, 'reports'), (snap) => {
-      const list: Report[] = [];
-      snap.forEach(d => list.push(d.data() as Report));
-      setReports(list);
-    }, (err) => console.error("Reports sync error:", err));
+    // Reports Sync - Admin only
+    const isAdmin = currentUser?.email === 'websitebuilder564@gmail.com' || currentRole === 'admin';
+    const unsubReports = isAdmin 
+      ? onSnapshot(collection(db, 'reports'), (snap) => {
+          const list: Report[] = [];
+          snap.forEach(d => list.push(d.data() as Report));
+          setReports(list);
+        }, (err) => console.error("Reports sync error:", err))
+      : () => {};
 
     return () => {
       unsubStudents();
@@ -374,7 +424,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubNotifs();
       unsubReports();
     };
-  }, [currentUser]);
+  }, [currentUser, currentRole]);
 
   // Derived current states
   const currentStudent = students.find(s => s.id === currentUser?.uid) || students.find(s => s.id === 'student-current') || students[0] || null;
@@ -989,6 +1039,195 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Load/Seed dashboard security configuration from Firestore
+  useEffect(() => {
+    const loadDashboardSecurity = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'security');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data && data.dashboardPassword) {
+            if (data.dashboardPassword !== 'skillchain@14qpe*') {
+              // Automatically correct/update the password to the exact one requested by the user
+              await setDoc(docRef, {
+                id: 'security',
+                dashboardPassword: 'skillchain@14qpe*'
+              });
+              setDbPassword('skillchain@14qpe*');
+            } else {
+              setDbPassword(data.dashboardPassword);
+            }
+          }
+        } else {
+          // Setting doesn't exist yet, seed it specifically
+          await setDoc(docRef, {
+            id: 'security',
+            dashboardPassword: 'skillchain@14qpe*'
+          });
+        }
+      } catch (err) {
+        console.warn("Could not load security settings from Firestore, using default local password.", err);
+      }
+    };
+    loadDashboardSecurity();
+  }, [currentUser]);
+
+  const verifyDashboardPassword = async (pass: string): Promise<boolean> => {
+    let correctPass = dbPassword;
+    try {
+      const snap = await getDoc(doc(db, 'settings', 'security'));
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data && data.dashboardPassword) {
+          correctPass = data.dashboardPassword;
+          setDbPassword(data.dashboardPassword);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not re-fetch security setting, falling back to cached password:", err);
+    }
+
+    if (pass === correctPass) {
+      setIsDashboardUnlocked(true);
+      sessionStorage.setItem('dashboard_unlocked', 'true');
+      return true;
+    }
+    return false;
+  };
+
+  const lockDashboard = () => {
+    setIsDashboardUnlocked(false);
+    sessionStorage.removeItem('dashboard_unlocked');
+  };
+
+  const registerPhoneUser = async (details: {
+    phone: string;
+    name: string;
+    email: string;
+    school: string;
+    skills: string[];
+    availability: 'Full-time' | 'Part-time' | 'Intermittent' | 'Unavailable';
+  }) => {
+    try {
+      setLoadingAuth(true);
+      
+      let user: any = auth.currentUser;
+      if (!user) {
+        try {
+          const res = await signInAnonymously(auth);
+          user = res.user;
+        } catch (authErr: any) {
+          if (authErr?.code === 'auth/admin-restricted-operation' || authErr?.message?.includes('admin-restricted-operation')) {
+            console.log("Anonymous authentication is disabled. Using fully simulated local-first user on Firestore with 'phone_' prefix bypass.");
+            const phoneDigits = details.phone.replace(/[^0-9]/g, '');
+            const simulatedUid = `phone_${phoneDigits || 'guest'}_${Math.random().toString(36).substring(2, 8)}`;
+            user = {
+              uid: simulatedUid,
+              displayName: details.name,
+              email: details.email,
+              isAnonymous: true,
+              photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+              providerData: []
+            };
+          } else {
+            throw authErr;
+          }
+        }
+      }
+      
+      if (!user) {
+        throw new Error("Could not authenticate session with Firebase");
+      }
+      
+      // Write the customized student profile to Firestore
+      const studentRef = doc(db, 'students', user.uid);
+      const newStudent: Student = {
+        id: user.uid,
+        name: details.name,
+        email: details.email,
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+        school: details.school,
+        skills: details.skills,
+        rating: 5.0,
+        reputation: 20,
+        education: [],
+        experience: [],
+        certifications: [],
+        availability: details.availability,
+        achievements: [],
+        completedProjectsCount: 0,
+        hackathonWins: 0,
+        innovationPoints: 10,
+        walletAddress: '',
+        personalWebsite: `Phone: ${details.phone}`
+      };
+      
+      await setDoc(studentRef, newStudent);
+      
+      // Save phone auth state in session storage
+      sessionStorage.setItem('phone_auth_user', 'true');
+      sessionStorage.setItem('phone_auth_uid', user.uid);
+      sessionStorage.setItem('phone_auth_name', details.name);
+      sessionStorage.setItem('phone_auth_email', details.email);
+      
+      setCurrentUser(user);
+      setLoadingAuth(false);
+    } catch (err: any) {
+      setLoadingAuth(false);
+      console.error("Error registering phone user:", err);
+      throw err;
+    }
+  };
+
+  const loginPhoneUser = async (phone: string): Promise<boolean> => {
+    try {
+      setLoadingAuth(true);
+      const targetPhone = `Phone: ${phone}`;
+      
+      // Look in the loaded state first
+      let existingStudent = students.find(s => s.personalWebsite === targetPhone);
+      
+      // If not in state, look directly in Firestore (as robust fallback)
+      if (!existingStudent) {
+        const snap = await getDocs(collection(db, 'students'));
+        snap.forEach(d => {
+          const s = d.data() as Student;
+          if (s.personalWebsite === targetPhone) {
+            existingStudent = s;
+          }
+        });
+      }
+      
+      if (existingStudent) {
+        sessionStorage.setItem('phone_auth_user', 'true');
+        sessionStorage.setItem('phone_auth_uid', existingStudent.id);
+        sessionStorage.setItem('phone_auth_name', existingStudent.name);
+        sessionStorage.setItem('phone_auth_email', existingStudent.email);
+        
+        const mockUser = {
+          uid: existingStudent.id,
+          displayName: existingStudent.name,
+          email: existingStudent.email,
+          isAnonymous: true,
+          photoURL: existingStudent.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+          providerData: []
+        } as any;
+        
+        setCurrentUser(mockUser);
+        setLoadingAuth(false);
+        return true;
+      }
+      
+      setLoadingAuth(false);
+      return false;
+    } catch (err) {
+      setLoadingAuth(false);
+      console.error("Error in loginPhoneUser:", err);
+      return false;
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       students,
@@ -1028,7 +1267,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateStudentProfile,
       savedOpportunityIds,
       toggleSaveOpportunity,
-      submitReport
+      submitReport,
+      isDashboardUnlocked,
+      verifyDashboardPassword,
+      lockDashboard,
+      registerPhoneUser,
+      loginPhoneUser
     }}>
       {children}
     </AppContext.Provider>

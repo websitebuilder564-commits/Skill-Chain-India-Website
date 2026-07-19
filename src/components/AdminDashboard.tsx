@@ -41,7 +41,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleVerifyPassword = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === 'Skill420@') {
+    if (passwordInput === 'Skill420@' || passwordInput === 'skillchain@14qpe*') {
       setIsAdminAuthenticated(true);
       sessionStorage.setItem('adminUnlocked', 'true');
       setPasswordError(null);
@@ -63,7 +63,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Filter achievements that are pending validation
   const pendingAchievements = students.flatMap(student => 
-    student.achievements
+    (student.achievements || [])
       .filter(ach => ach.status === 'pending')
       .map(ach => ({
         ...ach,

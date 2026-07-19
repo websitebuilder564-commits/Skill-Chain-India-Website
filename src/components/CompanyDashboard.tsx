@@ -310,10 +310,10 @@ export const CompanyDashboard: React.FC = () => {
               <h3 className="font-bold text-sm text-slate-200">Recent Builder Reviews</h3>
               
               <div className="space-y-3">
-                {currentCompany?.reviews.length === 0 ? (
+                {!currentCompany?.reviews || currentCompany.reviews.length === 0 ? (
                   <p className="text-xs text-slate-500 italic py-2">No completed feedback reviews registered.</p>
                 ) : (
-                  currentCompany?.reviews.map(rev => (
+                  currentCompany.reviews.map(rev => (
                     <div key={rev.id} className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-xs text-slate-300">{rev.authorName}</span>

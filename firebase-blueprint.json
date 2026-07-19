@@ -135,9 +135,23 @@
         "status": { "type": "string", "enum": ["pending", "resolved"] }
       },
       "required": ["id", "reporterId", "reportedId", "reason", "status"]
+    },
+    "Setting": {
+      "title": "System Setting",
+      "description": "System security and metadata configurations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "dashboardPassword": { "type": "string" }
+      },
+      "required": ["id", "dashboardPassword"]
     }
   },
   "firestore": {
+    "/settings/{settingId}": {
+      "schema": "Setting",
+      "description": "System security and metadata settings"
+    },
     "/students/{studentId}": {
       "schema": "Student",
       "description": "Student profiles collection"

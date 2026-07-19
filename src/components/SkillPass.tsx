@@ -41,7 +41,7 @@ export const SkillPass: React.FC<SkillPassProps> = ({ studentId, onBack, isOwnPr
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState(student.name);
   const [editSchool, setEditSchool] = useState(student.school);
-  const [editSkills, setEditSkills] = useState(student.skills.join(', '));
+  const [editSkills, setEditSkills] = useState((student.skills || []).join(', '));
   const [editAvailability, setEditAvailability] = useState(student.availability);
   const [portfolio, setPortfolio] = useState(student.portfolioUrl || '');
   const [github, setGithub] = useState(student.githubUrl || '');
@@ -98,7 +98,7 @@ export const SkillPass: React.FC<SkillPassProps> = ({ studentId, onBack, isOwnPr
     e.preventDefault();
     const newEdu: Education = { schoolName, degree, fieldOfStudy, startYear, endYear };
     updateStudentProfile({
-      education: [...student.education, newEdu]
+      education: [...(student.education || []), newEdu]
     });
     setShowEduModal(false);
     setSchoolName('');
@@ -113,7 +113,7 @@ export const SkillPass: React.FC<SkillPassProps> = ({ studentId, onBack, isOwnPr
     e.preventDefault();
     const newExp: Experience = { companyName, role, duration, description };
     updateStudentProfile({
-      experience: [...student.experience, newExp]
+      experience: [...(student.experience || []), newExp]
     });
     setShowExpModal(false);
     setCompanyName('');
@@ -124,14 +124,14 @@ export const SkillPass: React.FC<SkillPassProps> = ({ studentId, onBack, isOwnPr
   };
 
   const handleRemoveEdu = (idx: number) => {
-    const list = [...student.education];
+    const list = [...(student.education || [])];
     list.splice(idx, 1);
     updateStudentProfile({ education: list });
     showToast("Education log removed.");
   };
 
   const handleRemoveExp = (idx: number) => {
-    const list = [...student.experience];
+    const list = [...(student.experience || [])];
     list.splice(idx, 1);
     updateStudentProfile({ experience: list });
     showToast("Experience log removed.");
@@ -296,7 +296,7 @@ export const SkillPass: React.FC<SkillPassProps> = ({ studentId, onBack, isOwnPr
               <div className="space-y-2 pt-2">
                 <span className="text-[10px] font-mono text-slate-500 uppercase">Primary Skill Suite</span>
                 <div className="flex flex-wrap gap-1.5">
-                  {student.skills.map(s => (
+                  {(student.skills || []).map(s => (
                     <span key={s} className="bg-slate-950 border border-slate-850 text-slate-300 px-3 py-1 rounded-xl text-xs font-semibold">
                       {s}
                     </span>
@@ -332,7 +332,7 @@ export const SkillPass: React.FC<SkillPassProps> = ({ studentId, onBack, isOwnPr
               </h3>
               
               <div className="space-y-4">
-                {student.achievements.map(ach => (
+                {(student.achievements || []).map(ach => (
                   <div 
                     key={ach.id}
                     className="bg-slate-950 border border-slate-900 p-4 rounded-xl space-y-3 relative overflow-hidden group"
@@ -385,11 +385,11 @@ export const SkillPass: React.FC<SkillPassProps> = ({ studentId, onBack, isOwnPr
                 )}
               </div>
 
-              {student.experience.length === 0 ? (
+              {!student.experience || student.experience.length === 0 ? (
                 <p className="text-xs text-slate-500 italic">No professional logs added yet.</p>
               ) : (
                 <div className="space-y-4 relative pl-4 border-l border-slate-900">
-                  {student.experience.map((exp, i) => (
+                  {(student.experience || []).map((exp, i) => (
                     <div key={i} className="space-y-1 relative">
                       <div className="absolute -left-6 top-1.5 w-3.5 h-3.5 rounded-full bg-indigo-500 border-2 border-slate-950" />
                       <div className="flex justify-between items-start gap-4">
@@ -427,11 +427,11 @@ export const SkillPass: React.FC<SkillPassProps> = ({ studentId, onBack, isOwnPr
                 )}
               </div>
 
-              {student.education.length === 0 ? (
+              {!student.education || student.education.length === 0 ? (
                 <p className="text-xs text-slate-500 italic">No academic logs uploaded yet.</p>
               ) : (
                 <div className="space-y-4 pl-4 border-l border-slate-900 relative">
-                  {student.education.map((edu, i) => (
+                  {(student.education || []).map((edu, i) => (
                     <div key={i} className="space-y-1 relative">
                       <div className="absolute -left-6 top-1.5 w-3.5 h-3.5 rounded-full bg-purple-500 border-2 border-slate-950" />
                       <div className="flex justify-between items-start gap-4">
